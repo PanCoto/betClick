@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: betclick-db
+    environment:
+      POSTGRES_DB: betclick
+      POSTGRES_USER: betclick_user
+      POSTGRES_PASSWORD: betclick_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - betclick-net
+volumes:
+  pg_data:
+networks:
+  betclick-net:
