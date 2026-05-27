@@ -1,0 +1,111 @@
+
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: betclick_postgres
+    restart: unless-stopped
+    environment:
+
+      POSTGRES_USER: betclick_admin
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      POSTGRES_DB: betclick_db
+
+      BETCLICK_RUNTIME_PASSWORD: ${DB_RUNTIME_PASSWORD}
+      BETCLICK_EMPLOYEE_PASSWORD: ${DB_EMPLOYEE_PASSWORD}
+
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+
+      - postgres_data:/var/lib/postgresql/data
+
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U betclick_admin -d betclick_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - betclick_net
+
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+      tags:
+        - betclick:latest
+        - betclick:1.0.0
+    container_name: betclick_app
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+
+      SPRING_PROFILES_ACTIVE: docker
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/betclick_db
+      SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/betclick_db
+
+      DB_ADMIN_USERNAME: betclick_admin
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_RUNTIME_PASSWORD: ${DB_RUNTIME_PASSWORD}
+      DB_EMPLOYEE_PASSWORD: ${DB_EMPLOYEE_PASSWORD}
+      BETCLICK_SEED_USER_PASSWORD: ${BETCLICK_SEED_USER_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+
+      JAVA_OPTS: "-Xms256m -Xmx512m"
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 256M
+    networks:
+      - betclick_net
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: betclick_pgadmin
+    restart: unless-stopped
+    profiles:
+      - tools
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@betclick.pl}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - betclick_net
+
+
+volumes:
+  postgres_data:
+    name: betclick_postgres_data
+  pgadmin_data:
+    name: betclick_pgadmin_data
+
+
+networks:
+  betclick_net:
+    name: betclick_network
+    driver: bridge
