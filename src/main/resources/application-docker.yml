@@ -1,0 +1,67 @@
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: changeit
+    key-store-type: PKCS12
+    key-alias: betclick
+  http:
+    port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/betclick_db}
+    username: betclick_runtime
+    password: ${DB_RUNTIME_PASSWORD}
+    hikari:
+      pool-name: BetClickDockerPool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      initialization-fail-timeout: 60000
+
+  flyway:
+    url: ${SPRING_FLYWAY_URL:jdbc:postgresql://postgres:5432/betclick_db}
+    user: ${DB_ADMIN_USERNAME:betclick_admin}
+    password: ${DB_ADMIN_PASSWORD}
+    connect-retries: 5
+    connect-retries-interval: 10
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate.jdbc.batch_size: 50
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
+      hibernate.jdbc.batch_versioned_data: true
+
+  thymeleaf:
+    cache: true
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+logging:
+  level:
+    com.betclick: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+app:
+  random:
+    seed: 12345
+  auto-settle:
+    enabled: true
+    interval-ms: 60000
