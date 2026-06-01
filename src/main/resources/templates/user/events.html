@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Oferta zakładów | betclick')}">
+<body>
+<main class="fade-in-el">
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div class="glass-panel p-3 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-tag text-cyan me-2"></i> Dyscypliny</h5>
+                <div class="list-group list-group-flush gap-2 list-group-transparent">
+                    <a th:href="@{/events}" 
+                       class="list-group-item list-group-item-action rounded border-0 nav-link-custom" 
+                       th:classappend="${selectedSportId == null ? 'active' : ''}">
+                        <i class="bi bi-globe me-2"></i> Wszystkie sporty
+                    </a>
+                    <a th:each="sport : ${sports}" 
+                       th:href="@{/events(sportId=${sport.id})}" 
+                       class="list-group-item list-group-item-action rounded border-0 nav-link-custom" 
+                       th:classappend="${selectedSportId == sport.id ? 'active' : ''}">
+                        <i class="bi bi-circle-fill me-2 sport-dot"></i>
+                        <span th:text="${sport.name}">Piłka Nożna</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="glass-panel">
+                <h4 class="fw-bold mb-4">
+                    <i class="bi bi-calendar2-event text-cyan me-2"></i> 
+                    Nadchodzące wydarzenia
+                </h4>
+
+                <div th:unless="${events.isEmpty()}" class="input-group mb-4">
+                    <span class="input-group-text bg-dark bg-opacity-25 border-secondary text-secondary">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input id="event-search-input"
+                           type="search"
+                           class="form-control form-control-custom"
+                           placeholder="Szukaj wydarzenia, druzyny lub ligi">
+                </div>
+
+                <div th:if="${events.isEmpty()}" class="text-center py-5 text-secondary">
+                    <i class="bi bi-calendar-x fs-1 d-block mb-3"></i>
+                    Brak nadchodzących spotkań w wybranej dyscyplinie.
+                </div>
+
+                <div th:unless="${events.isEmpty()}"
+                     class="d-flex flex-column gap-4"
+                     data-show-more
+                     data-show-more-limit="6"
+                     data-show-more-step="6"
+                     data-show-more-item=":scope > .event-card"
+                     data-event-list
+                     data-show-more-label="Pokaż więcej wydarzeń">
+                    <div th:each="event : ${events}"
+                         class="event-card bg-dark bg-opacity-20 border border-secondary rounded p-4"
+                         th:attr="data-event-name=${event.name},data-team-a=${event.teamA},data-team-b=${event.teamB},data-league-name=${event.leagueName},data-sport-name=${event.sportName},data-event-status=${event.status},data-event-end=${event.endTime}">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <span class="badge bg-secondary bg-opacity-50 text-light text-uppercase mr-2" th:text="${event.sportName}">Sport</span>
+                                <span class="text-secondary small ms-2" th:text="${event.leagueName}">League</span>
+                                <span th:if="${event.status == 'FINISHED'}" class="badge bg-success text-dark ms-2" data-finished-status>Zakonczone</span>
+                                <span th:if="${event.status == 'CANCELLED'}" class="badge bg-danger text-light ms-2">Anulowane</span>
+                                <span th:unless="${event.status == 'FINISHED'}" class="badge bg-success text-dark ms-2 d-none" data-finished-status>Zakonczone</span>
+                            </div>
+                            <div class="event-time-summary text-end">
+                                <small class="text-info fw-semibold d-block">
+                                    <i class="bi bi-clock me-1"></i>
+                                    Start: <span th:text="${#temporals.format(event.startTime, 'dd.MM.yyyy HH:mm')}">18:00</span>
+                                </small>
+                                <small class="text-secondary d-block">
+                                    Koniec: <span th:text="${#temporals.format(event.endTime, 'dd.MM.yyyy HH:mm')}">19:30</span>
+                                </small>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold text-center my-3" th:text="${event.name}">Team A vs Team B</h5>
+                        <div class="text-center text-secondary small" th:text="${event.teamA + ' - ' + event.teamB}">Team A - Team B</div>
+
+                        <div th:if="${event.status == 'UPCOMING'}">
+
+                        <div th:each="market : ${event.markets}" th:if="${market.name == 'Zwycięzca meczu'}" class="row g-2 mt-4">
+                            <div th:each="sel : ${market.selections}" class="col">
+                                <button class="btn btn-odds selection-odds-btn" 
+                                        th:data-selection-id="${sel.id}" 
+                                        th:data-selection-name="${sel.name}" 
+                                        th:data-market-name="${market.name}" 
+                                        th:data-event-name="${event.name}" 
+                                        th:data-odds="${sel.odds}">
+                                    <span class="odds-label" th:text="${sel.name}">1</span>
+                                    <span class="fs-5" th:text="${#numbers.formatDecimal(sel.odds, 1, 2)}">1.80</span>
+                                </button>
+                            </div>
+                        </div>
+                        </div>
+                        <div th:unless="${event.status == 'UPCOMING'}" class="mt-4">
+                            <button class="btn btn-outline-secondary w-100" type="button" disabled>Niedostepne do obstawienia</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="glass-panel betslip-container">
+                <h5 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-ticket-perforated-fill text-cyan me-2"></i> Twój kupon</span>
+                    <button class="btn btn-sm btn-outline-danger border-0 clear-slip-btn" id="clear-betslip-btn">Wyczyść</button>
+                </h5>
+
+                <div class="betslip-items" id="betslip-items-container">
+                    <div class="text-center py-5 text-secondary" id="betslip-empty-state">
+                        Kliknij w kursy wydarzeń, aby dodać je do kuponu.
+                    </div>
+                </div>
+
+                <div class="border-top border-secondary pt-3 mt-3 betslip-calculation" id="betslip-calculation">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Łączny kurs:</span>
+                        <span class="fw-bold text-cyan" id="betslip-total-odds">1.00</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="betslip-stake" class="form-label text-secondary small">Stawka (PLN):</label>
+                        <input type="number" step="1.00" min="1.00" class="form-control form-control-custom text-center fw-bold fs-5 text-success" id="betslip-stake" value="10.00">
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-4 bg-dark bg-opacity-20 rounded p-2">
+                        <span class="text-secondary fw-semibold">Ew. wygrana:</span>
+                        <span class="fw-bold text-success fs-5" id="betslip-potential-win">10.00 PLN</span>
+                    </div>
+
+                    <button class="btn btn-orange w-100 py-3 fw-bold rounded-3" id="place-bet-btn">
+                        Wnieś zakład
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
