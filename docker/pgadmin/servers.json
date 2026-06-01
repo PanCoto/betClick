@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "betClick PostgreSQL",
+      "Group": "betClick",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "betclick_db",
+      "Username": "betclick_admin",
+      "SSLMode": "prefer",
+      "PassFile": "/pgpass"
+    }
+  }
+}
