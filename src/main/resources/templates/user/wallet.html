@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Mój portfel | betclick')}">
+<body>
+<main class="fade-in-el">
+    <div class="row mb-5 text-center text-md-start">
+        <div class="col-12">
+            <div class="glass-panel p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h3 class="fw-bold mb-1"><i class="bi bi-wallet2 text-cyan me-2"></i> Zarządzanie funduszami</h3>
+                    <p class="text-secondary mb-0">Wpłacaj i wypłacaj środki oraz przeglądaj historię operacji finansowych.</p>
+                </div>
+                <div class="bg-dark bg-opacity-35 px-4 py-3 rounded border border-secondary wallet-balance-card">
+                    <small class="text-secondary d-block text-uppercase text-center wallet-balance-caption">STAN PORTFELA</small>
+                    <h2 class="fw-bold text-success text-center mb-0" th:text="${profile.balance != null ? #numbers.formatDecimal(profile.balance, 1, 2) + ' PLN' : '0.00 PLN'}">0.00 PLN</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="glass-panel h-100">
+                <h4 class="fw-bold mb-3 text-cyan"><i class="bi bi-plus-circle me-2"></i> Doładuj konto (Wpłata)</h4>
+                <p class="text-secondary small mb-4">Maksymalna jednorazowa wpłata to 50 000.00 PLN. Środki zostaną dodane do portfela natychmiast.</p>
+
+                <div th:if="${depositSuccess}" class="alert alert-success border-0 bg-success bg-opacity-10 text-success rounded-3" role="alert" th:text="${depositSuccess}"></div>
+                <div th:if="${depositError}" class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3" role="alert" th:text="${depositError}"></div>
+
+                <form th:action="@{/financial/deposit}" method="POST">
+                    <div class="mb-4">
+                        <label for="deposit-amount" class="form-label text-secondary fw-semibold">Kwota doładowania (PLN)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-secondary border-secondary text-white">PLN</span>
+                            <input type="number" step="0.01" min="1.00" max="50000.00" class="form-control form-control-custom fs-4 text-white" id="deposit-amount" name="amount" value="50.00" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-cyan w-100 py-3 fw-bold rounded-3 text-dark">
+                        Zatwierdź wpłatę
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="glass-panel h-100">
+                <h4 class="fw-bold mb-3 text-warning"><i class="bi bi-dash-circle me-2"></i> Wypłać środki</h4>
+                <p class="text-secondary small mb-4">Wypłata zostanie zrealizowana na powiązany rachunek bankowy. Czas realizacji do 15 minut.</p>
+
+                <div th:if="${withdrawSuccess}" class="alert alert-success border-0 bg-success bg-opacity-10 text-success rounded-3" role="alert" th:text="${withdrawSuccess}"></div>
+                <div th:if="${withdrawError}" class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3" role="alert" th:text="${withdrawError}"></div>
+
+                <form th:action="@{/financial/withdraw}" method="POST">
+                    <div class="mb-4">
+                        <label for="withdraw-amount" class="form-label text-secondary fw-semibold">Kwota wypłaty (PLN)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-secondary border-secondary text-white">PLN</span>
+                            <input type="number" step="0.01" min="1.00" th:max="${profile.balance != null ? profile.balance : 0}" class="form-control form-control-custom fs-4 text-white" id="withdraw-amount" name="amount" value="50.00" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-orange w-100 py-3 fw-bold rounded-3 text-dark">
+                        Zatwierdź wypłatę
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-panel">
+                <h4 class="fw-bold mb-4"><i class="bi bi-clock-history text-cyan me-2"></i> Historia transakcji</h4>
+
+                <div th:if="${transactions.isEmpty()}" class="text-center py-5 text-secondary">
+                    <i class="bi bi-receipt fs-1 d-block mb-3"></i>
+                    Brak transakcji finansowych na koncie.
+                </div>
+
+                <div th:unless="${transactions.isEmpty()}"
+                     class="table-responsive"
+                     data-show-more
+                     data-show-more-limit="8"
+                     data-show-more-step="8"
+                     data-show-more-item="tbody > tr"
+                     data-show-more-label="Wyświetl więcej rekordów">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Data operacji</th>
+                                <th>Typ</th>
+                                <th>Kwota</th>
+                                <th>Opis</th>
+                                <th>Numer kuponu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="tx : ${transactions}">
+                                <td th:text="${tx.id}">1</td>
+                                <td th:text="${#temporals.format(tx.createdAt, 'yyyy-MM-dd HH:mm')}">2026-06-01</td>
+                                <td>
+                                    <span th:if="${tx.type == 'DEPOSIT'}" class="badge bg-success bg-opacity-15 text-success">WPŁATA</span>
+                                    <span th:if="${tx.type == 'WITHDRAWAL'}" class="badge bg-warning bg-opacity-15 text-warning">WYPŁATA</span>
+                                    <span th:if="${tx.type == 'BET'}" class="badge bg-info bg-opacity-15 text-info">ZAKŁAD</span>
+                                    <span th:if="${tx.type == 'WIN'}" class="badge badge-won">WYGRANA</span>
+                                </td>
+                                <td class="fw-bold">
+                                    <span th:if="${tx.amount.compareTo(T(java.math.BigDecimal).ZERO) > 0}" class="text-success" th:text="'+' + ${#numbers.formatDecimal(tx.amount, 1, 2)} + ' PLN'">+0.00 PLN</span>
+                                    <span th:if="${tx.amount.compareTo(T(java.math.BigDecimal).ZERO) < 0}" class="text-danger" th:text="${#numbers.formatDecimal(tx.amount, 1, 2)} + ' PLN'">-0.00 PLN</span>
+                                    <span th:if="${tx.amount.compareTo(T(java.math.BigDecimal).ZERO) == 0}" th:text="'0.00 PLN'">0.00 PLN</span>
+                                </td>
+                                <td th:text="${tx.description}">Opis transakcji</td>
+                                <td>
+                                    <span th:if="${tx.couponTicketNumber != null}" class="text-cyan fw-semibold" th:text="${tx.couponTicketNumber}">BET-0000</span>
+                                    <span th:if="${tx.couponTicketNumber == null}">—</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

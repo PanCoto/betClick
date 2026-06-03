@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Historia kuponow | betclick')}">
+<body>
+<main class="fade-in-el">
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-panel">
+                <h4 class="fw-bold mb-4"><i class="bi bi-collection-fill text-cyan me-2"></i> Twoje kupony</h4>
+
+                <div th:if="${successMessage}" class="alert alert-success border-0 bg-success bg-opacity-10 text-success rounded-3" role="alert" th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}" class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3" role="alert" th:text="${errorMessage}"></div>
+
+                <div th:if="${coupons.isEmpty()}" class="text-center py-5 text-secondary">
+                    <i class="bi bi-ticket-detailed fs-1 d-block mb-3"></i>
+                    Brak wniesionych kuponow w historii.
+                    <div class="mt-3">
+                        <a th:href="@{/events}" class="btn btn-cyan text-dark fw-semibold">Wnies pierwszy zaklad</a>
+                    </div>
+                </div>
+
+                <div th:unless="${coupons.isEmpty()}"
+                     class="table-responsive"
+                     data-show-more
+                     data-show-more-limit="8"
+                     data-show-more-step="8"
+                     data-show-more-item="tbody > tr"
+                     data-show-more-label="Wyswietl wiecej rekordow">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Numer kuponu</th>
+                                <th>Data wniesienia</th>
+                                <th>Stawka</th>
+                                <th>Kurs laczny</th>
+                                <th>Maks. wygrana</th>
+                                <th>Wygrana</th>
+                                <th>Status</th>
+                                <th>Rozliczenie</th>
+                                <th>Akcja</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="coupon : ${coupons}">
+                                <td class="fw-semibold text-cyan" th:text="${coupon.ticketNumber}">BET-000000</td>
+                                <td th:text="${#temporals.format(coupon.placedAt, 'yyyy-MM-dd HH:mm')}">2026-06-01</td>
+                                <td th:text="${#numbers.formatDecimal(coupon.stake, 1, 2)} + ' PLN'">0.00 PLN</td>
+                                <td th:text="${#numbers.formatDecimal(coupon.totalOdds, 1, 2)}">1.00</td>
+                                <td class="fw-bold text-success" th:text="${#numbers.formatDecimal(coupon.potentialWin, 1, 2)} + ' PLN'">0.00 PLN</td>
+                                <td>
+                                    <span th:if="${coupon.status == 'WON'}" class="fw-bold text-success" th:text="${#numbers.formatDecimal(coupon.actualWin, 1, 2)} + ' PLN'">100.00 PLN</span>
+                                    <span th:if="${coupon.status == 'CASHED_OUT'}" class="fw-bold text-info" th:text="${#numbers.formatDecimal(coupon.actualWin, 1, 2)} + ' PLN'">80.00 PLN</span>
+                                    <span th:unless="${coupon.status == 'WON' or coupon.status == 'CASHED_OUT'}">-</span>
+                                </td>
+                                <td>
+                                    <span th:if="${coupon.status == 'ACTIVE'}" class="badge badge-active">Aktywny</span>
+                                    <span th:if="${coupon.status == 'WON'}" class="badge badge-won">Wygrany</span>
+                                    <span th:if="${coupon.status == 'LOST'}" class="badge badge-lost">Przegrany</span>
+                                    <span th:if="${coupon.status == 'CANCELLED'}" class="badge bg-secondary bg-opacity-20 text-secondary">Anulowany</span>
+                                    <span th:if="${coupon.status == 'CASHED_OUT'}" class="badge bg-info bg-opacity-20 text-info">Cashout</span>
+                                </td>
+                                <td>
+                                    <span th:if="${coupon.settledAt != null}" th:text="${#temporals.format(coupon.settledAt, 'yyyy-MM-dd HH:mm')}">2026-06-01</span>
+                                    <span th:if="${coupon.settledAt == null}">-</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/coupon/{id}(id=${coupon.id})}" class="btn btn-sm btn-outline-light">
+                                        <i class="bi bi-eye"></i> Pokaz
+                                    </a>
+                                    <form th:if="${coupon.cashoutAvailable}"
+                                          th:action="@{/coupon/{id}/cashout(id=${coupon.id})}"
+                                          method="post"
+                                          class="d-inline">
+                                        <input type="hidden" name="redirectTo" value="history">
+                                        <button type="submit" class="btn btn-sm btn-outline-info ms-1">
+                                            Cashout
+                                            <span th:text="${#numbers.formatDecimal(coupon.cashoutAmount, 1, 2)} + ' PLN'">0.00 PLN</span>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
