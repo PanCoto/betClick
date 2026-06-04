@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Szczegóły kuponu | betclick')}">
+<body>
+<main class="fade-in-el">
+    <div class="row justify-content-center">
+        <div class="col-md-9 col-lg-8">
+            <div class="mb-4">
+                <a th:href="@{/history}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Powrót do historii
+                </a>
+            </div>
+
+            <div class="glass-panel p-4 mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+                    <div>
+                        <small class="text-secondary d-block">KUPON ZAKŁADOWY</small>
+                        <h3 class="fw-bold text-cyan mb-0" th:text="${coupon.ticketNumber}">BET-00000000</h3>
+                    </div>
+                    <div class="text-end mt-3 mt-sm-0">
+                        <span th:if="${coupon.status == 'ACTIVE'}" class="badge badge-active fs-6 px-3 py-2">Aktywny</span>
+                        <span th:if="${coupon.status == 'WON'}" class="badge badge-won fs-6 px-3 py-2">Wygrany</span>
+                        <span th:if="${coupon.status == 'LOST'}" class="badge badge-lost fs-6 px-3 py-2">Przegrany</span>
+                        <span th:if="${coupon.status == 'CANCELLED'}" class="badge bg-secondary bg-opacity-20 text-secondary fs-6 px-3 py-2">Anulowany</span>
+                        <span th:if="${coupon.status == 'CASHED_OUT'}" class="badge bg-info bg-opacity-20 text-info fs-6 px-3 py-2">Cashout</span>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-6 col-sm-3 text-center text-sm-start">
+                        <small class="text-secondary d-block">Data wniesienia</small>
+                        <span class="fw-bold" th:text="${#temporals.format(coupon.placedAt, 'yyyy-MM-dd HH:mm')}">2026-06-01</span>
+                    </div>
+                    <div class="col-6 col-sm-3 text-center text-sm-start">
+                        <small class="text-secondary d-block">Stawka</small>
+                        <span class="fw-bold" th:text="${#numbers.formatDecimal(coupon.stake, 1, 2)} + ' PLN'">0.00 PLN</span>
+                    </div>
+                    <div class="col-6 col-sm-3 text-center text-sm-start">
+                        <small class="text-secondary d-block">Łączny kurs</small>
+                        <span class="fw-bold text-cyan" th:text="${#numbers.formatDecimal(coupon.totalOdds, 1, 2)}">1.00</span>
+                    </div>
+                    <div class="col-6 col-sm-3 text-center text-sm-start">
+                        <small class="text-secondary d-block">Maks. Wygrana</small>
+                        <span class="fw-bold text-success" th:text="${#numbers.formatDecimal(coupon.potentialWin, 1, 2)} + ' PLN'">0.00 PLN</span>
+                    </div>
+                </div>
+
+                <div th:if="${coupon.status == 'WON'}" class="alert alert-success border-0 bg-success bg-opacity-15 text-success rounded-3 mb-4">
+                    <h5 class="fw-bold mb-1"><i class="bi bi-trophy-fill me-2"></i> Gratulacje! Kupon wygrany!</h5>
+                    Kwota <strong th:text="${#numbers.formatDecimal(coupon.actualWin, 1, 2)} + ' PLN'">0.00 PLN</strong> została przekazana na Twoje konto.
+                </div>
+
+                <h5 class="fw-bold mb-3">Zakłady składowe</h5>
+                <div th:if="${coupon.status == 'CASHED_OUT'}" class="alert alert-info border-0 bg-info bg-opacity-15 text-info rounded-3 mb-4">
+                    Cashout wyplacony: <strong th:text="${#numbers.formatDecimal(coupon.actualWin, 1, 2)} + ' PLN'">0.00 PLN</strong>.
+                </div>
+
+                <div th:if="${coupon.cashoutAvailable}" class="alert alert-info border-0 bg-info bg-opacity-10 text-info rounded-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        Dostepny cashout:
+                        <strong th:text="${#numbers.formatDecimal(coupon.cashoutAmount, 1, 2)} + ' PLN'">0.00 PLN</strong>
+                    </div>
+                    <form th:action="@{/coupon/{id}/cashout(id=${coupon.id})}" method="post" class="m-0">
+                        <input type="hidden" name="redirectTo" value="detail">
+                        <button type="submit" class="btn btn-outline-info">Cashout</button>
+                    </form>
+                </div>
+
+                <div class="d-flex flex-column gap-3"
+                     data-show-more
+                     data-show-more-limit="5"
+                     data-show-more-step="5"
+                     data-show-more-item=":scope > .coupon-selection-card"
+                     data-show-more-label="Pokaż więcej">
+                    <div th:each="sel : ${coupon.selections}" class="coupon-selection-card bg-dark bg-opacity-30 rounded p-3 border border-secondary">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="fw-bold mb-1" th:text="${sel.eventName}">Team A vs Team B</h6>
+                                <small class="text-secondary d-block mb-2" th:text="${sel.marketName}">Rynki</small>
+                                <small class="text-secondary d-block mb-2">
+                                    Rozpoczęcie:
+                                    <span th:text="${#temporals.format(sel.eventStartTime, 'yyyy-MM-dd HH:mm')}">2026-06-01 18:00</span>
+                                    · Zakończenie:
+                                    <span th:text="${#temporals.format(sel.eventEndTime, 'yyyy-MM-dd HH:mm')}">2026-06-01 19:30</span>
+                                </small>
+                                <span class="badge bg-secondary bg-opacity-35 text-light" th:text="'Typ: ' + ${sel.selectionName}">Typ</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold text-cyan d-block fs-5" th:text="${#numbers.formatDecimal(sel.oddsAtPlacement, 1, 2)}">1.80</span>
+                                <div class="mt-2">
+                                    <span th:if="${sel.isWinner == null}" class="badge bg-secondary bg-opacity-30 text-secondary">Nierozliczony</span>
+                                    <span th:if="${sel.isWinner == true}" class="badge badge-won"><i class="bi bi-check-circle-fill me-1"></i> Wygrana</span>
+                                    <span th:if="${sel.isWinner == false}" class="badge badge-lost"><i class="bi bi-x-circle-fill me-1"></i> Przegrana</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${coupon.settledAt != null}" class="mt-4 pt-3 border-top border-secondary text-secondary small">
+                    Kupon został rozliczony dnia: <span th:text="${#temporals.format(coupon.settledAt, 'yyyy-MM-dd HH:mm')}">2026-06-01</span>.
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
