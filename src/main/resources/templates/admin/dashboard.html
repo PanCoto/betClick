@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Panel administratora | betclick')}">
+<body>
+<main class="fade-in-el">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-panel p-4 panel-hero admin-hero">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2 class="fw-bold mb-1"><i class="bi bi-shield-lock-fill text-warning me-2"></i> Panel pracownika bukmacherskiego</h2>
+                        <p class="text-secondary mb-0">Zarządzanie kontami użytkowników, zatwierdzanie wyników sportowych oraz analiza statystyczna.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="glass-panel admin-stat-card text-center p-4 border border-secondary">
+                <i class="bi bi-people-fill fs-1 text-info"></i>
+                <h3 class="fw-bold mt-2" th:text="${playerCount}">0</h3>
+                <p class="text-secondary small mb-3">Rejestracje graczy</p>
+                <a th:href="@{/admin/users}" class="btn btn-sm btn-outline-info w-100">Zarządzaj użytkownikami</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel admin-stat-card text-center p-4 border border-secondary">
+                <i class="bi bi-controller fs-1 text-warning"></i>
+                <h3 class="fw-bold mt-2" th:text="${activeEventCount}">0</h3>
+                <p class="text-secondary small mb-3">Aktywne wydarzenia</p>
+                <a th:href="@{/admin/events}" class="btn btn-sm btn-outline-warning w-100">Rozliczaj wyniki</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel admin-stat-card text-center p-4 border border-secondary">
+                <i class="bi bi-bar-chart-line-fill fs-1 text-warning"></i>
+                <h3 class="fw-bold mt-2">Raporty</h3>
+                <p class="text-secondary small mb-3">Finanse i zyski bukmachera</p>
+                <a th:href="@{/admin/reports}" class="btn btn-sm btn-outline-cyan w-100">Generuj raporty obrotu</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-panel">
+                <h4 class="fw-bold mb-4"><i class="bi bi-journal-text text-warning me-2"></i> Rejestr audytowy (Trigger-based database audit log)</h4>
+
+                <div th:if="${logs.isEmpty()}" class="text-center py-5 text-secondary">
+                    <i class="bi bi-file-earmark-lock fs-1 d-block mb-3"></i>
+                    Brak zdarzeń w logu audytowym bazy danych.
+                </div>
+
+                <div th:unless="${logs.isEmpty()}"
+                     class="audit-log-list"
+                     data-show-more
+                     data-show-more-limit="6"
+                     data-show-more-step="6"
+                     data-show-more-item=":scope > .audit-log-card"
+                     data-show-more-label="Wyświetl więcej rekordów">
+                    <article th:each="log : ${logs}" class="audit-log-card">
+                        <div class="audit-log-meta">
+                            <div>
+                                <small class="text-secondary d-block">ID wpisu</small>
+                                <span class="fw-bold" th:text="${log.id}">1</span>
+                            </div>
+                            <div>
+                                <small class="text-secondary d-block">Data wpisu</small>
+                                <span th:text="${#temporals.format(log.changedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-06-01 12:00:00</span>
+                            </div>
+                            <div>
+                                <small class="text-secondary d-block">Tabela</small>
+                                <span class="fw-semibold text-warning" th:text="${log.tableName}">tabela</span>
+                            </div>
+                            <div>
+                                <small class="text-secondary d-block">Operacja</small>
+                                <span th:if="${log.operation == 'INSERT'}" class="badge bg-success bg-opacity-20 text-success">INSERT</span>
+                                <span th:if="${log.operation == 'UPDATE'}" class="badge bg-info bg-opacity-20 text-info">UPDATE</span>
+                                <span th:if="${log.operation == 'DELETE'}" class="badge bg-danger bg-opacity-20 text-danger">DELETE</span>
+                            </div>
+                            <div>
+                                <small class="text-secondary d-block">Rola/Routines User</small>
+                                <span class="text-secondary" th:text="${log.dbUser}">postgres</span>
+                            </div>
+                            <div>
+                                <small class="text-secondary d-block">ID rekordu</small>
+                                <span th:text="${log.recordId}">0</span>
+                            </div>
+                        </div>
+
+                        <div class="audit-json-grid">
+                            <section class="audit-json-panel audit-json-panel-old">
+                                <div class="audit-json-title">Stare dane (JSONB)</div>
+                                <pre class="audit-json-block" th:text="${log.oldData != null ? log.oldData : '—'}">{}</pre>
+                            </section>
+                            <section class="audit-json-panel audit-json-panel-new">
+                                <div class="audit-json-title">Nowe dane (JSONB)</div>
+                                <pre class="audit-json-block" th:text="${log.newData != null ? log.newData : '—'}">{}</pre>
+                            </section>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Raporty finansowe | betclick')}">
+<body>
+<main class="fade-in-el">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <div class="mb-4">
+        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Powrót do panelu
+        </a>
+    </div>
+
+    <div class="glass-panel mb-5">
+        <h4 class="fw-bold mb-3"><i class="bi bi-filter-square text-warning me-2"></i> Filtrowanie okresu</h4>
+        <form th:action="@{/admin/reports}" method="GET" class="row align-items-end g-3">
+            <div class="col-md-4">
+                <label for="from" class="form-label text-secondary small fw-semibold">Od dnia:</label>
+                <input type="date" class="form-control form-control-custom" id="from" name="from" th:value="${fromDate}" required>
+            </div>
+            <div class="col-md-4">
+                <label for="to" class="form-label text-secondary small fw-semibold">Do dnia:</label>
+                <input type="date" class="form-control form-control-custom" id="to" name="to" th:value="${toDate}" required>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-orange text-dark fw-bold w-100 py-2">
+                    Filtruj raport
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row mb-5" th:unless="${report.isEmpty()}">
+        <div class="col-12">
+            <div class="glass-panel">
+                <h4 class="fw-bold mb-4 text-center"><i class="bi bi-graph-up-arrow text-success me-2"></i> Wykres przychodów i zysków domu</h4>
+                <div class="chart-box">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-panel">
+                <h4 class="fw-bold mb-4"><i class="bi bi-table text-warning me-2"></i> Szczegóły raportu obrotowego</h4>
+
+                <div th:if="${report.isEmpty()}" class="text-center py-5 text-secondary">
+                    <i class="bi bi-clipboard-x fs-1 d-block mb-3"></i>
+                    Brak danych transakcyjnych dla wybranego okresu.
+                </div>
+
+                <div th:unless="${report.isEmpty()}"
+                     class="table-responsive"
+                     data-show-more
+                     data-show-more-limit="10"
+                     data-show-more-step="10"
+                     data-show-more-item="tbody > tr"
+                     data-show-more-label="Wyświetl więcej rekordów">
+                    <table class="table table-custom table-hover report-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Suma wpłat</th>
+                                <th>Suma wypłat</th>
+                                <th>Suma stawek (Obrót)</th>
+                                <th>Wypłacone wygrane</th>
+                                <th>Zysk netto domu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="row : ${report}"
+                                class="report-row"
+                                th:data-date="${row.reportDate}"
+                                th:data-profit="${row.houseProfit}"
+                                th:data-stake="${row.betsPlaced}">
+                                <td class="fw-semibold" th:text="${row.reportDate}">2026-06-01</td>
+                                <td class="text-success money-value" th:text="${#numbers.formatDecimal(row.deposits, 1, 2)} + ' PLN'">0.00 PLN</td>
+                                <td class="text-warning money-value" th:text="${#numbers.formatDecimal(row.withdrawals, 1, 2)} + ' PLN'">0.00 PLN</td>
+                                <td class="money-value" th:text="${#numbers.formatDecimal(row.betsPlaced, 1, 2)} + ' PLN'">0.00 PLN</td>
+                                <td class="money-value" th:text="${#numbers.formatDecimal(row.winsPaid, 1, 2)} + ' PLN'">0.00 PLN</td>
+                                <td class="fw-bold fs-5 money-value"
+                                    th:classappend="${row.houseProfit.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"
+                                    th:text="${#numbers.formatDecimal(row.houseProfit, 1, 2)} + ' PLN'">
+                                    0.00 PLN
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:unless="${report.isEmpty()}">
+        document.addEventListener("DOMContentLoaded", function() {
+            const reportRows = Array.from(document.querySelectorAll(".report-row"));
+            const reportDates = reportRows.map(row => row.dataset.date);
+            const houseProfits = reportRows.map(row => Number(row.dataset.profit));
+            const totalStakes = reportRows.map(row => Number(row.dataset.stake));
+
+            const ctx = document.getElementById('profitChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: reportDates,
+                    datasets: [
+                        {
+                            label: 'Obrót (Suma stawek)',
+                            data: totalStakes,
+                            borderColor: '#ffd200',
+                            backgroundColor: 'rgba(255, 210, 0, 0.14)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Zysk bukmachera',
+                            data: houseProfits,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#f8fafc' }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</main>
+</body>
+</html>

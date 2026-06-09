@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Zarządzanie użytkownikami | betclick')}">
+<body>
+<main class="fade-in-el">
+    <div class="mb-4">
+        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Powrót do panelu
+        </a>
+    </div>
+
+    <div class="glass-panel">
+        <h4 class="fw-bold mb-4"><i class="bi bi-people text-warning me-2"></i> Zarządzanie użytkownikami</h4>
+
+        <div th:if="${successMessage}" class="alert alert-success border-0 bg-success bg-opacity-10 text-success rounded-3" role="alert" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3" role="alert" th:text="${errorMessage}"></div>
+
+        <div class="admin-toolbar mb-3">
+            <div class="text-secondary small" th:if="${usersPage.totalElements > 0}">
+                Wyświetlono
+                <span th:text="${usersPage.number * usersPage.size + 1}">1</span>-<span th:text="${usersPage.number * usersPage.size + usersPage.numberOfElements}">50</span>
+                z <span th:text="${usersPage.totalElements}">100</span> użytkowników
+            </div>
+            <form th:action="@{/admin/users}" method="GET" class="d-flex align-items-center gap-2">
+                <input type="hidden" name="page" value="0">
+                <label for="user-page-size" class="form-label mb-0 small text-secondary">Pokaż:</label>
+                <select id="user-page-size" name="size" class="form-select form-select-sm form-control-custom page-size-select">
+                    <option th:each="pageSize : ${userPageSizes}"
+                            th:value="${pageSize}"
+                            th:text="${pageSize}"
+                            th:selected="${usersPage.size == pageSize}">50</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-cyan">Zastosuj</button>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Login</th>
+                        <th>Imię i Nazwisko</th>
+                        <th>Email</th>
+                        <th>Rola</th>
+                        <th>Saldo</th>
+                        <th>Status</th>
+                        <th>Zarządzanie statusem</th>
+                        <th>Zmień rolę</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${usersPage.content}">
+                        <td th:text="${user.id}">1</td>
+                        <td class="fw-bold text-cyan" th:text="${user.login}">login</td>
+                        <td th:text="${user.firstName} + ' ' + ${user.lastName}">Jan Kowalski</td>
+                        <td th:text="${user.email}">user@email.pl</td>
+                        <td>
+                            <span th:if="${user.role != null and user.role.name() == 'ADMIN'}" class="badge bg-danger">ADMIN</span>
+                            <span th:if="${user.role != null and user.role.name() == 'MODERATOR'}" class="badge bg-warning text-dark">MODERATOR</span>
+                            <span th:if="${user.role == null or user.role.name() == 'PLAYER'}" class="badge bg-info text-dark">PLAYER</span>
+                        </td>
+                        <td class="fw-bold text-success" th:text="${user.balance != null ? #numbers.formatDecimal(user.balance, 1, 2) + ' PLN' : '0.00 PLN'}">0.00 PLN</td>
+                        <td>
+                            <span th:if="${user.isActive}" class="badge bg-success bg-opacity-20 text-success"><i class="bi bi-check-circle me-1"></i> Aktywne</span>
+                            <span th:unless="${user.isActive}" class="badge bg-danger bg-opacity-20 text-danger"><i class="bi bi-slash-circle me-1"></i> Zablokowane</span>
+                        </td>
+                        <td>
+                            <form th:action="@{/admin/users/{id}/toggle-active(id=${user.id})}" method="POST">
+                                <input type="hidden" name="page" th:value="${usersPage.number}">
+                                <input type="hidden" name="size" th:value="${usersPage.size}">
+                                <button type="submit" class="btn btn-sm w-100" 
+                                        th:classappend="${user.isActive ? 'btn-outline-danger' : 'btn-success text-dark'}">
+                                    <span th:text="${user.isActive ? 'Zablokuj' : 'Aktywuj'}">Przełącz</span>
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <form th:action="@{/admin/users/{id}/role(id=${user.id})}" method="POST" class="d-flex gap-1">
+                                <input type="hidden" name="page" th:value="${usersPage.number}">
+                                <input type="hidden" name="size" th:value="${usersPage.size}">
+                                <select name="role" class="form-select form-select-sm form-control-custom py-1">
+                                    <option th:each="roleOpt : ${T(com.betclick.model.enums.UserRole).values()}" 
+                                            th:value="${roleOpt}" 
+                                            th:text="${roleOpt}"
+                                            th:selected="${user.role == roleOpt}">
+                                        ROLE
+                                    </option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-warning py-1"><i class="bi bi-save"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${usersPage.totalPages > 1}" class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pagination-panel">
+            <div class="text-muted small">
+                Wyświetlono <span th:text="${usersPage.number * usersPage.size + 1}">1</span>-<span th:text="${usersPage.number * usersPage.size + usersPage.numberOfElements}">50</span> z
+                <span th:text="${usersPage.totalElements}">50</span> użytkowników
+            </div>
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                <a th:if="${not usersPage.last}"
+                   class="btn btn-sm btn-show-more"
+                   th:href="@{/admin/users(page=${usersPage.number + 1}, size=${usersPage.size})}">
+                    <i class="bi bi-chevron-down me-1"></i> Następna strona
+                </a>
+                <nav aria-label="Nawigacja użytkowników">
+                    <ul class="pagination pagination-sm pagination-readable mb-0">
+                        <li class="page-item" th:classappend="${usersPage.first} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/users(page=${usersPage.number - 1}, size=${usersPage.size})}">
+                                Poprzednia
+                            </a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, usersPage.totalPages - 1)}"
+                            th:classappend="${usersPage.number == i} ? 'active'">
+                            <a class="page-link" th:href="@{/admin/users(page=${i}, size=${usersPage.size})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${usersPage.last} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/users(page=${usersPage.number + 1}, size=${usersPage.size})}">
+                                Następna
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

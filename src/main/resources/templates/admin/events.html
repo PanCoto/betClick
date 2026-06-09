@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Rozliczanie wydarzeń | betclick')}">
+<body>
+<main class="fade-in-el">
+    <div class="mb-4">
+        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Powrót do panelu
+        </a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success border-0 bg-success bg-opacity-10 text-success rounded-3" role="alert" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3" role="alert" th:text="${errorMessage}"></div>
+
+    <div class="glass-panel mb-4 admin-event-form-card">
+        <h4 class="fw-bold mb-4"><i class="bi bi-plus-circle text-warning me-2"></i> Dodaj wydarzenie</h4>
+
+        <form th:action="@{/admin/events}" th:object="${createEventRequest}" method="POST" class="row g-3">
+            <div class="col-md-6">
+                <label for="leagueId" class="form-label small fw-semibold">Sport / liga</label>
+                <select id="leagueId" class="form-select form-control-custom" th:field="*{leagueId}" required>
+                    <option value="">Wybierz ligę</option>
+                    <option th:each="league : ${leagues}"
+                            th:value="${league.id}"
+                            th:text="${league.sport.name + ' / ' + league.name}">
+                        Piłka nożna / Ekstraklasa
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="name" class="form-label small fw-semibold">Nazwa wydarzenia</label>
+                <input id="name" type="text" class="form-control form-control-custom" th:field="*{name}" placeholder="Jagiellonia - Legia" required>
+            </div>
+            <div class="col-md-6">
+                <label for="teamA" class="form-label small fw-semibold">Drużyna A / gospodarz</label>
+                <input id="teamA" type="text" class="form-control form-control-custom" th:field="*{teamA}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="teamB" class="form-label small fw-semibold">Drużyna B / gość</label>
+                <input id="teamB" type="text" class="form-control form-control-custom" th:field="*{teamB}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="startTime" class="form-label small fw-semibold">Data i godzina rozpoczęcia</label>
+                <input id="startTime" type="datetime-local" class="form-control form-control-custom" th:field="*{startTime}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="expectedDurationMinutes" class="form-label small fw-semibold">Przewidywany czas trwania (min)</label>
+                <input id="expectedDurationMinutes" type="number" min="1" step="1" class="form-control form-control-custom" th:field="*{expectedDurationMinutes}" required>
+            </div>
+            <div class="col-md-4">
+                <label for="homeOdds" class="form-label small fw-semibold">Kurs na 1</label>
+                <input id="homeOdds" type="number" min="1.00" step="0.01" class="form-control form-control-custom" th:field="*{homeOdds}" required>
+            </div>
+            <div class="col-md-4">
+                <label for="drawOdds" class="form-label small fw-semibold">Kurs na X</label>
+                <input id="drawOdds" type="number" min="1.00" step="0.01" class="form-control form-control-custom" th:field="*{drawOdds}">
+            </div>
+            <div class="col-md-4">
+                <label for="awayOdds" class="form-label small fw-semibold">Kurs na 2</label>
+                <input id="awayOdds" type="number" min="1.00" step="0.01" class="form-control form-control-custom" th:field="*{awayOdds}" required>
+            </div>
+            <div class="col-12 d-flex justify-content-end">
+                <button type="submit" class="btn btn-cyan px-4">
+                    <i class="bi bi-plus-lg me-1"></i> Dodaj wydarzenie
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="glass-panel">
+        <h4 class="fw-bold mb-4"><i class="bi bi-controller text-warning me-2"></i> Lista i rozliczanie wydarzeń sportowych</h4>
+
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nazwa spotkania</th>
+                        <th>Czas wydarzenia</th>
+                        <th>Dyscyplina / Liga</th>
+                        <th>Kursy 1X2</th>
+                        <th>Wynik</th>
+                        <th>Status</th>
+                        <th>Rozlicz wynik spotkania</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="event : ${eventsPage.content}">
+                        <td th:text="${event.id}">1</td>
+                        <td>
+                            <div class="fw-bold" th:text="${event.name}">Team A vs Team B</div>
+                            <small class="text-secondary d-block mt-1" th:text="${event.teamA + ' - ' + event.teamB}">Team A - Team B</small>
+                        </td>
+                        <td class="event-time-cell">
+                            <small class="text-secondary d-block">Rozpoczęcie</small>
+                            <span class="fw-semibold" th:text="${#temporals.format(event.startTime, 'yyyy-MM-dd HH:mm')}">2026-06-01 18:00</span>
+                            <small class="text-secondary d-block mt-2">Planowane zakończenie</small>
+                            <span th:text="${#temporals.format(event.endTime, 'yyyy-MM-dd HH:mm')}">2026-06-01 19:30</span>
+                            <small class="text-secondary d-block mt-1" th:text="${event.expectedDurationMinutes + ' min'}">90 min</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary bg-opacity-35 text-white" th:text="${event.sportName}">Sport</span>
+                            <small class="text-secondary d-block mt-1" th:text="${event.leagueName}">Liga</small>
+                        </td>
+                        <td class="event-odds-cell">
+                            <div th:each="market : ${event.markets}" th:if="${market.name == 'Zwycięzca meczu'}" class="odds-badge-row">
+                                <span th:each="sel : ${market.selections}" class="badge odds-badge" th:text="${sel.name + ' ' + #numbers.formatDecimal(sel.odds, 1, 2)}">1 2.00</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span th:if="${event.status == 'FINISHED'}" class="fw-bold text-success fs-5"
+                                  th:text="${event.resultA} + ' : ' + ${event.resultB}">2 : 1</span>
+                            <span th:unless="${event.status == 'FINISHED'}">—</span>
+                        </td>
+                        <td>
+                            <span th:if="${event.status == 'UPCOMING'}" class="badge badge-active">ZAPLANOWANE</span>
+                            <span th:if="${event.status == 'LIVE'}" class="badge bg-warning text-dark">NA ŻYWO</span>
+                            <span th:if="${event.status == 'FINISHED'}" class="badge bg-success text-dark">ZAKOŃCZONE</span>
+                            <span th:if="${event.status == 'CANCELLED'}" class="badge bg-danger text-light">ANULOWANE</span>
+                        </td>
+                        <td>
+                            <div th:if="${event.status != 'FINISHED' && event.status != 'CANCELLED'}" class="dropdown">
+                                <button class="btn btn-sm btn-warning text-dark fw-bold dropdown-toggle" type="button"
+                                        th:id="'settleDropdown-' + ${event.id}" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                                    Rozlicz wydarzenie
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end p-4 border border-secondary settle-menu"
+                                     th:aria-labelledby="'settleDropdown-' + ${event.id}">
+                                    
+                                    <form th:action="@{/admin/events/{id}/settle(id=${event.id})}" method="POST">
+                                        <input type="hidden" name="page" th:value="${eventsPage.number}">
+                                        <input type="hidden" name="size" th:value="${eventsPage.size}">
+                                        <h6 class="fw-bold text-warning mb-3">Wprowadź wynik</h6>
+                                        <div class="row g-2 mb-3">
+                                            <div class="col">
+                                                <label class="small text-secondary" th:text="${event.teamA}">Drużyna A</label>
+                                                <input type="number" min="0" name="resultA" class="form-control form-control-custom text-center" placeholder="0" required>
+                                            </div>
+                                            <div class="col-auto align-self-end text-secondary mb-2">:</div>
+                                            <div class="col">
+                                                <label class="small text-secondary" th:text="${event.teamB}">Drużyna B</label>
+                                                <input type="number" min="0" name="resultB" class="form-control form-control-custom text-center" placeholder="0" required>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="fw-bold text-warning mb-2 border-top border-secondary pt-3">Wygrywające selekcje</h6>
+                                        <div th:each="market : ${event.markets}" class="mb-3">
+                                            <small class="fw-semibold text-cyan d-block mb-1" th:text="${market.name}">Market</small>
+                                            <div th:each="sel : ${market.selections}" class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="winningSelectionIds"
+                                                       th:id="'sel-' + ${sel.id}" th:value="${sel.id}">
+                                                <label class="form-check-label small" th:for="'sel-' + ${sel.id}" th:text="${sel.name} + ' (' + ${sel.odds} + ')'">
+                                                    Selection
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-success text-dark btn-sm w-100 fw-bold py-2 mt-2">
+                                            Zatwierdź rozliczenie
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </div>
+                            <span th:unless="${event.status != 'FINISHED' && event.status != 'CANCELLED'}" class="text-secondary small">Rozliczone</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${eventsPage.totalPages > 1}" class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pagination-panel">
+            <div class="text-muted small">
+                Pokazywanie <span th:text="${eventsPage.number * eventsPage.size + 1}">1</span> do
+                <span th:text="${eventsPage.number * eventsPage.size + eventsPage.numberOfElements}">10</span> z
+                <span th:text="${eventsPage.totalElements}">50</span> wydarzeń
+            </div>
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                <a th:if="${not eventsPage.last}"
+                   class="btn btn-sm btn-show-more"
+                   th:href="@{/admin/events(page=${eventsPage.number + 1}, size=${eventsPage.size})}">
+                    <i class="bi bi-chevron-down me-1"></i> Wyświetl więcej rekordów
+                </a>
+                <nav aria-label="Nawigacja wydarzeń">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:classappend="${eventsPage.first} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/events(page=${eventsPage.number - 1}, size=${eventsPage.size})}" aria-label="Poprzednia">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, eventsPage.totalPages - 1)}"
+                            th:classappend="${eventsPage.number == i} ? 'active'">
+                            <a class="page-link" th:href="@{/admin/events(page=${i}, size=${eventsPage.size})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${eventsPage.last} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/events(page=${eventsPage.number + 1}, size=${eventsPage.size})}" aria-label="Następna">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
