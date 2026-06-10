@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Gra Wojna | betclick')}">
+<body>
+<main class="fade-in-el">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="glass-panel">
+                <h4 class="fw-bold mb-4"><i class="bi bi-controller text-cyan me-2"></i> Wojna</h4>
+
+                <div th:if="${warSuccess}" class="alert alert-success border-0 bg-success bg-opacity-10 text-success rounded-3" role="alert" th:text="${warSuccess}"></div>
+                <div th:if="${warError}" class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3" role="alert" th:text="${warError}"></div>
+
+                <form th:action="@{/games/war}" th:object="${warGameRequest}" method="post" class="d-flex flex-column gap-4">
+                    <div>
+                        <label class="form-label text-secondary small">Wybierz typ</label>
+                        <div class="d-flex flex-column gap-2">
+                            <label class="btn btn-outline-info text-start">
+                                <input class="form-check-input me-2" type="radio" th:field="*{selectedOutcome}" th:value="${T(com.betclick.model.enums.WarOutcome).PLAYER_WIN}">
+                                Wygrywa gracz <span class="fw-bold float-end">2.00</span>
+                            </label>
+                            <label class="btn btn-outline-info text-start">
+                                <input class="form-check-input me-2" type="radio" th:field="*{selectedOutcome}" th:value="${T(com.betclick.model.enums.WarOutcome).DEALER_WIN}">
+                                Wygrywa krupier <span class="fw-bold float-end">2.00</span>
+                            </label>
+                            <label class="btn btn-outline-info text-start">
+                                <input class="form-check-input me-2" type="radio" th:field="*{selectedOutcome}" th:value="${T(com.betclick.model.enums.WarOutcome).WAR}">
+                                Wojna / remis <span class="fw-bold float-end">10.00</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="war-stake" class="form-label text-secondary small">Stawka (PLN)</label>
+                        <input id="war-stake" type="number" min="0.10" step="0.10"
+                               class="form-control form-control-custom text-center fw-bold fs-5 text-success"
+                               th:field="*{stake}" placeholder="10.00" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-orange w-100 py-3 fw-bold rounded-3">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> Postaw
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="glass-panel mb-4" th:if="${lastRound != null}">
+                <h4 class="fw-bold mb-4"><i class="bi bi-stars text-warning me-2"></i> Ostatni wynik</h4>
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <div class="bg-dark bg-opacity-20 rounded p-3 border border-secondary text-center">
+                            <small class="text-secondary d-block">Karta gracza</small>
+                            <span class="fw-bold text-cyan fs-1" th:text="${lastRound.playerCard}">14</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="bg-dark bg-opacity-20 rounded p-3 border border-secondary text-center">
+                            <small class="text-secondary d-block">Karta krupiera</small>
+                            <span class="fw-bold text-orange fs-1" th:text="${lastRound.dealerCard}">10</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom mb-0">
+                        <tbody>
+                            <tr>
+                                <th>Twoj typ</th>
+                                <td th:text="${lastRound.selectedOutcome}">PLAYER_WIN</td>
+                            </tr>
+                            <tr>
+                                <th>Wynik</th>
+                                <td th:text="${lastRound.actualOutcome}">PLAYER_WIN</td>
+                            </tr>
+                            <tr>
+                                <th>Kurs</th>
+                                <td th:text="${#numbers.formatDecimal(lastRound.odds, 1, 2)}">2.00</td>
+                            </tr>
+                            <tr>
+                                <th>Stawka</th>
+                                <td th:text="${#numbers.formatDecimal(lastRound.stake, 1, 2)} + ' PLN'">10.00 PLN</td>
+                            </tr>
+                            <tr>
+                                <th>Wyplata</th>
+                                <td class="fw-bold"
+                                    th:classappend="${lastRound.statusCode == 'WON'} ? ' text-success' : ' text-danger'"
+                                    th:text="${#numbers.formatDecimal(lastRound.payout, 1, 2)} + ' PLN'">0.00 PLN</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                <h4 class="fw-bold mb-4"><i class="bi bi-clock-history text-cyan me-2"></i> Ostatnie rundy</h4>
+                <div th:if="${history.isEmpty()}" class="text-center py-5 text-secondary">
+                    <i class="bi bi-hourglass fs-1 d-block mb-3"></i>
+                    Nie masz jeszcze rozegranych rund.
+                </div>
+                <div th:unless="${history.isEmpty()}" class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Typ</th>
+                                <th>Wynik</th>
+                                <th>Karty</th>
+                                <th>Stawka</th>
+                                <th>Wyplata</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="round : ${history}">
+                                <td th:text="${#temporals.format(round.createdAt, 'yyyy-MM-dd HH:mm')}">2026-06-09</td>
+                                <td th:text="${round.selectedOutcome}">PLAYER_WIN</td>
+                                <td th:text="${round.actualOutcome}">PLAYER_WIN</td>
+                                <td th:text="${round.playerCard + ' : ' + round.dealerCard}">14 : 10</td>
+                                <td th:text="${#numbers.formatDecimal(round.stake, 1, 2)} + ' PLN'">10.00 PLN</td>
+                                <td th:text="${#numbers.formatDecimal(round.payout, 1, 2)} + ' PLN'">0.00 PLN</td>
+                                <td>
+                                    <span th:if="${round.statusCode == 'WON'}" class="badge badge-won">WON</span>
+                                    <span th:if="${round.statusCode == 'LOST'}" class="badge badge-lost">LOST</span>
+                                    <span th:if="${round.statusCode != 'WON' and round.statusCode != 'LOST'}" class="badge bg-secondary bg-opacity-30 text-secondary" th:text="${round.statusCode}">STATUS</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
