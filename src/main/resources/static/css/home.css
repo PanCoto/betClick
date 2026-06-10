@@ -1,0 +1,106 @@
+.home-page {
+    background:
+        linear-gradient(135deg, rgba(215, 25, 32, 0.13), transparent 44%),
+        linear-gradient(180deg, var(--bc-bg) 0%, var(--bc-bg-deep) 100%);
+}
+
+.home-navbar {
+    background: rgba(9, 10, 15, 0.94);
+    border-bottom: 1px solid var(--bc-border);
+}
+
+.nav-logo {
+    color: var(--bc-text);
+    text-decoration: none;
+    font-size: 1.8rem;
+    font-weight: 800;
+}
+
+.nav-logo span {
+    color: var(--bc-yellow);
+}
+
+.hero-section {
+    min-height: 58vh;
+    padding: 84px 0 72px;
+    background:
+        linear-gradient(135deg, rgba(255, 210, 0, 0.12), transparent 34%),
+        linear-gradient(180deg, rgba(32, 36, 47, 0.88), rgba(15, 17, 23, 0.98));
+    text-align: center;
+    border-bottom: 1px solid var(--bc-border);
+}
+
+.hero-accent {
+    color: var(--bc-yellow);
+}
+
+.feature-card {
+    height: 100%;
+    padding: 30px 26px;
+    background: linear-gradient(180deg, rgba(32, 36, 47, 0.96), rgba(23, 26, 34, 0.96));
+    border: 1px solid var(--bc-border);
+    border-radius: 8px;
+}
+
+.feature-card:hover {
+    border-color: rgba(255, 210, 0, 0.34);
+}
+
+.btn-cta {
+    display: inline-block;
+    padding: 13px 28px;
+    background: linear-gradient(135deg, var(--bc-yellow), var(--bc-yellow-soft));
+    color: var(--bc-bg);
+    border: 0;
+    border-radius: 8px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.btn-cta:hover {
+    background: linear-gradient(135deg, #ffe45c, var(--bc-yellow));
+    color: var(--bc-bg);
+}
+
+.btn-cta-outline {
+    display: inline-block;
+    padding: 12px 28px;
+    background: rgba(255, 210, 0, 0.04);
+    color: var(--bc-yellow);
+    border: 1px solid rgba(255, 210, 0, 0.72);
+    border-radius: 8px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.btn-cta-outline:hover {
+    background: var(--bc-yellow-muted);
+    color: var(--bc-yellow);
+}
+
+.site-footer {
+    background: rgba(9, 10, 15, 0.96);
+}
+
+@media (max-width: 575.98px) {
+    .home-navbar .container {
+        gap: 14px;
+    }
+
+    .home-navbar .ms-auto {
+        display: flex;
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .home-navbar .btn {
+        flex: 1 1 auto;
+        margin-right: 0 !important;
+    }
+
+    .hero-section {
+        min-height: auto;
+        padding: 56px 0 52px;
+    }
+}

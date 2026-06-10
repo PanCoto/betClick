@@ -1,0 +1,78 @@
+.betslip-calculation {
+    display: none;
+}
+
+.clear-slip-btn {
+    font-size: 0.8rem;
+}
+
+.stat-card.orange {
+    border-left-color: var(--bc-yellow-soft);
+}
+
+.list-group-transparent {
+    background: transparent;
+}
+
+.sport-dot {
+    color: var(--bc-yellow);
+    font-size: 0.5rem;
+}
+
+.dashboard-sport-badge {
+    font-size: 0.7rem;
+}
+
+.wallet-balance-card {
+    min-width: 210px;
+    background: rgba(15, 17, 23, 0.72) !important;
+    border-color: var(--bc-border-strong) !important;
+}
+
+.wallet-balance-caption {
+    font-size: 0.75rem;
+    letter-spacing: 0;
+}
+
+.event-card,
+.dashboard-event-card,
+.coupon-selection-card {
+    background: rgba(15, 17, 23, 0.58) !important;
+    border: 1px solid var(--bc-border) !important;
+    border-radius: 8px !important;
+}
+
+.event-card:hover,
+.dashboard-event-card:hover,
+.coupon-selection-card:hover {
+    border-color: rgba(255, 210, 0, 0.34) !important;
+}
+
+.wallet-balance-card h2,
+.panel-hero .text-success,
+#betslip-potential-win {
+    color: var(--bc-yellow) !important;
+}
+
+.event-time-summary {
+    min-width: 170px;
+}
+
+@media (max-width: 991.98px) {
+    .betslip-container {
+        position: static;
+        max-height: none;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .btn-odds {
+        min-height: 56px;
+        padding: 8px;
+    }
+
+    .event-time-summary {
+        min-width: 0;
+        text-align: left !important;
+    }
+}
