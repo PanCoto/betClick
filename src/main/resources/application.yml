@@ -1,0 +1,81 @@
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: changeit
+    key-store-type: PKCS12
+    key-alias: betclick
+  http:
+    port: 8080
+
+spring:
+  application:
+    name: betclick
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/betclick_db
+    username: betclick_runtime
+    password: ${DB_RUNTIME_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: BetClickRuntimePool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate.format_sql: true
+      hibernate.default_schema: public
+      hibernate.jdbc.batch_size: 50
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
+      hibernate.jdbc.batch_versioned_data: true
+
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://localhost:5432/betclick_db
+    user: ${DB_ADMIN_USERNAME:betclick_admin}
+    password: ${DB_ADMIN_PASSWORD}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: 86400000
+
+betclick:
+  seed:
+    user-password: ${BETCLICK_SEED_USER_PASSWORD:}
+
+logging:
+  level:
+    com.betclick: DEBUG
+    org.springframework.security: WARN
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  show-actuator: true
+
+app:
+  random:
+    seed: 12345
+  auto-settle:
+    enabled: true
+    interval-ms: 60000 # 1 minute
+
