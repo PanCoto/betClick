@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Panel gracza | betclick')}">
+<body>
+<main class="fade-in-el">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-panel p-4 panel-hero">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2 class="fw-bold mb-1">Cześć, <span th:text="${profile.firstName} + ' ' + ${profile.lastName}">Gracz</span>!</h2>
+                        <p class="text-secondary mb-0">Witaj z powrotem. Oto przegląd Twoich statystyk bukmacherskich.</p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <span class="text-secondary d-block fs-6">Dostępne środki</span>
+                        <span class="fw-bold text-success fs-2" th:text="${profile.balance != null ? #numbers.formatDecimal(profile.balance, 1, 2) + ' PLN' : '0.00 PLN'}">0.00 PLN</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="glass-panel stat-card text-center p-3">
+                <i class="bi bi-ticket-detailed fs-1 text-cyan"></i>
+                <h4 class="text-secondary mt-2 fs-6">Suma kuponów</h4>
+                <h2 class="fw-bold mb-0" th:text="${profile.totalBets}">0</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel stat-card won text-center p-3">
+                <i class="bi bi-emoji-smile fs-1 text-success"></i>
+                <h4 class="text-secondary mt-2 fs-6">Wygrane</h4>
+                <h2 class="fw-bold mb-0" th:text="${profile.wonBets}">0</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel stat-card lost text-center p-3">
+                <i class="bi bi-emoji-frown fs-1 text-danger"></i>
+                <h4 class="text-secondary mt-2 fs-6">Przegrane</h4>
+                <h2 class="fw-bold mb-0" th:text="${profile.lostBets}">0</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel stat-card orange text-center p-3">
+                <i class="bi bi-percent fs-1 text-orange"></i>
+                <h4 class="text-secondary mt-2 fs-6">Skuteczność</h4>
+                <h2 class="fw-bold mb-0" th:text="${profile.winRate} + '%'">0.00%</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="glass-panel mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0"><i class="bi bi-clock-history text-cyan me-2"></i> Ostatnie kupony</h4>
+                    <a th:href="@{/history}" class="btn btn-outline-info btn-sm">Wszystkie kupony</a>
+                </div>
+
+                <div th:if="${recentCoupons.isEmpty()}" class="text-center py-5 text-secondary">
+                    <i class="bi bi-ticket-perforated fs-1 d-block mb-3"></i>
+                    Nie postawiłeś jeszcze żadnych zakładów.
+                    <div class="mt-3">
+                        <a th:href="@{/events}" class="btn btn-cyan text-dark fw-semibold">Zobacz ofertę</a>
+                    </div>
+                </div>
+
+                <div th:unless="${recentCoupons.isEmpty()}"
+                     class="table-responsive"
+                     data-show-more
+                     data-show-more-limit="5"
+                     data-show-more-step="5"
+                     data-show-more-item="tbody > tr"
+                     data-show-more-label="Pokaż więcej">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Numer kuponu</th>
+                                <th>Data</th>
+                                <th>Stawka</th>
+                                <th>Kurs</th>
+                                <th>Do wygrania</th>
+                                <th>Status</th>
+                                <th>Akcja</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="coupon : ${recentCoupons}">
+                                <td class="fw-semibold text-cyan" th:text="${coupon.ticketNumber}">BET-000000</td>
+                                <td th:text="${#temporals.format(coupon.placedAt, 'yyyy-MM-dd HH:mm')}">2026-06-01</td>
+                                <td th:text="${#numbers.formatDecimal(coupon.stake, 1, 2)} + ' PLN'">0.00 PLN</td>
+                                <td th:text="${#numbers.formatDecimal(coupon.totalOdds, 1, 2)}">1.00</td>
+                                <td th:text="${#numbers.formatDecimal(coupon.potentialWin, 1, 2)} + ' PLN'">0.00 PLN</td>
+                                <td>
+                                    <span th:if="${coupon.status == 'ACTIVE'}" class="badge badge-active">Aktywny</span>
+                                    <span th:if="${coupon.status == 'WON'}" class="badge badge-won">Wygrany</span>
+                                    <span th:if="${coupon.status == 'LOST'}" class="badge badge-lost">Przegrany</span>
+                                    <span th:if="${coupon.status == 'CANCELLED'}" class="badge bg-secondary bg-opacity-20 text-secondary">Anulowany</span>
+                                    <span th:if="${coupon.status == 'CASHED_OUT'}" class="badge bg-info bg-opacity-20 text-info">Cashout</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/coupon/{id}(id=${coupon.id})}" class="btn btn-sm btn-outline-light">Szczegóły</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-panel">
+                <h4 class="fw-bold mb-4"><i class="bi bi-fire text-warning me-2"></i> Najpopularniejsze</h4>
+                <div class="list-group list-group-flush gap-3 list-group-transparent"
+                     data-show-more
+                     data-show-more-limit="3"
+                     data-show-more-step="3"
+                     data-show-more-item=":scope > .dashboard-event-card"
+                     data-show-more-label="Pokaż więcej">
+                    <div th:each="event : ${popularEvents}" class="list-group-item dashboard-event-card bg-dark bg-opacity-20 rounded p-3 border-0">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-secondary bg-opacity-35 text-secondary text-uppercase dashboard-sport-badge" th:text="${event.sportName}">Sport</span>
+                            <small class="text-secondary" th:text="${#temporals.format(event.startTime, 'dd.MM HH:mm') + ' - ' + #temporals.format(event.endTime, 'HH:mm')}">18:00 - 19:30</small>
+                        </div>
+                        <h6 class="fw-bold mb-1" th:text="${event.name}">Team A vs Team B</h6>
+                        <small class="text-secondary d-block mb-3" th:text="${event.leagueName}">League</small>
+                        <a th:href="@{/events}" class="btn btn-sm btn-outline-cyan w-100">
+                            Obstaw mecz
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
